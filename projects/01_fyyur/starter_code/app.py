@@ -24,7 +24,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# TODO: connect to a local postgresql database - check
+# TODO: connect to a local postgresql database - CHECK
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -47,7 +47,10 @@ class Venue(db.Model):
     seeking_description = db.Column(db.Text())
     shows = db.relationship('Show', backref='Venue', lazy=True, cascade='all, delete-orphan')
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate - check
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate - CHECK
+
+    def __repr__(self):
+        return f'<Venue {self.id} {self.name}>'
 
 class Artist(db.Model):
     __tablename__ = 'Artist'
@@ -65,7 +68,10 @@ class Artist(db.Model):
     seeking_description = db.Column(db.Text())
     shows = db.relationship('Show', backref='Artist', lazy=True, cascade='all, delete-orphan')
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate - check
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate - CHECK
+
+    def __repr__(self):
+        return f'<Artist {self.id} {self.name}>'
 
 class Show(db.Model):
   __tablename__ = 'Show'
@@ -75,7 +81,10 @@ class Show(db.Model):
   venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
   artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration. - check
+# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration. - CHECK
+
+def __repr__(self):
+        return f'<Show {self.id} {self.start_time}>'
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -132,17 +141,15 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
+  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive. - CHECK
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  # response = Venue.query.filter(Venue.name.like('seach_term%'))
+  searchTerm = request.form.get('search_term', '')
+  venues = db.session.query(Venue).filter(Venue.name.ilike('%' + searchTerm + '%')).all()
+  count =len(venues)
   response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+    "count": count,
+    "data": venues
   }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
