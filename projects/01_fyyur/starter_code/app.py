@@ -7,6 +7,7 @@ import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
@@ -19,9 +20,11 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-# TODO: connect to a local postgresql database
+# TODO: connect to a local postgresql database - check
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -38,8 +41,13 @@ class Venue(db.Model):
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    genres = db.Column(db.ARRAY(db.String()))
+    website = db.Column(db.String())
+    seeking_talent = db.Column(db.Boolean)
+    seeking_description = db.Column(db.Text())
+    shows = db.relationship('Show', backref='Venue', lazy=True, cascade='all, delete-orphan')
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate - check
 
 class Artist(db.Model):
     __tablename__ = 'Artist'
@@ -52,10 +60,22 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website = db.Column(db.String())
+    seeking_venue = db.Column(db.Boolean)
+    seeking_description = db.Column(db.Text())
+    shows = db.relationship('Show', backref='Artist', lazy=True, cascade='all, delete-orphan')
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate - check
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+class Show(db.Model):
+  __tablename__ = 'Show'
+
+  id = db.Column(db.Integer, primary_key=True)
+  start_time = db.Column(db.DateTime())
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+
+# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration. - check
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -115,6 +135,7 @@ def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+  # response = Venue.query.filter(Venue.name.like('seach_term%'))
   response={
     "count": 1,
     "data": [{
